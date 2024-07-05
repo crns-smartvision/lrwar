@@ -1,0 +1,35 @@
+dataset:
+  name: "lrw-ar"
+  dir: "/home/achraf/Documents/LRW-AR-EXPORTED" #TODO adjust the path to the root directory of the dataset
+  partitions: ["train", "val", "test"]
+
+export_dir: "./data/lrw-ar-landmarks"
+
+landmarks_extraction:
+  landmarks_detector:
+    name: "dlib" # "dlib" or "mediapipe", you can just visualize landmarks with media pipe, export is only available with dlib
+    model_path: "./data/shape_predictor_68_face_landmarks.dat" # needed for dlib only
+  landmarks_affix: "landmarks_"
+  landmarks_extension: ".npz"
+  display: false
+
+mouth_croping:
+  video_affix: "video_"
+  video_extension: ".npz"
+  crop_width: 96
+  crop_height: 96
+  convert_to_gray: true
+  interpolate_landmarks: false
+  smoothing_landmarks_window: 5
+  starting_landmark_index: 48
+  ending_landmark_index: 68
+  mean_face_landmarks_path: "./data/mean_face_landmarks.txt"
+  display: false
+
+annotation_export_parameters:
+  annotation_affix: "annotation_"
+  annotation_extension: ".csv"
+
+hydra:
+    job:
+        chdir: true

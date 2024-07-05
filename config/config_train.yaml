@@ -1,0 +1,102 @@
+paths:
+    log: "runs"
+    # if you need to start training over a checkpoint, you can specify the path of the checkpoint
+    #checkpoint: "checkpoints/landmarks_only_resnet18.pth"
+
+dataset:
+        # dataset selection "lrw-ar" or "lrw"
+    name: "lrw-ar-landmarks"
+    dir: "./data/lrw-ar-landmarks"
+    params:
+        landmarks_subset_idx: [2,3,4,5,6,7,8,9,10,11,12,13,14,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67]
+        modality: "landmarks"  # could be "all", "landmarks", or "video"
+        labels_subset_file: "labels.txt"
+
+
+#dataset:
+#    name: "lrw-ar"
+#    dir: "/home/achraf/workspace/crns/gitprojects/LRW_AR_FUSION/data/lrwar"
+
+model:
+    frontend:
+        video:
+            type: "resnet18"
+            params:
+                conv_3D:
+                    kernel_size: [5, 7, 7]
+                    stride: [1,2,2]
+                    padding: [2,3,3]
+                    bias: False
+                    relu_type: "prelu"
+                    output_dim: 64
+                MaxPool3D:
+                    kernel_size: [1,3,3]
+                    stride: [1,2,2]
+                    padding: [0,1,1]
+                ResNet:
+                    block: "BasicBlock"
+                    layers_input_dims: [64, 128, 256, 512]
+                    layers: [2, 2, 2, 2]
+                    relu_type: "prelu"
+        landmarks:
+            params:
+                num_landmarks: 33
+                GAT:
+                    conv_type: "gat"
+                    relu_type: "relu"
+                    conv1:
+                        in_channels: 2
+                        out_channels: 16
+                        dropout: 0.1
+                    conv2:
+                        in_channels: 16
+                        out_channels: 64
+                        dropout: 0.1
+                fc:
+                    hidden_dim: 64
+                    output_dim: 512
+                transformer_encoder_layer:
+                    num_heads: 8
+                    num_layers: 1
+                    hidden_dim: 512
+                    dropout: 0.1
+                    output_dim: 512
+                    feedforward_dim: 1024
+                positional_encoding:
+                    hidden_dim: 512
+                    max_len: 40
+
+        fusion:
+            type: "cross-attention"
+            params:
+                num_heads: 8
+                input_dim: 512
+                output_dim: 1024
+
+    backend:
+        type: "tcn"
+        params:
+            input_dim: 1024
+            hidden_dim: 256
+            tcn_kernel_resolution: [3,5,7]
+            num_layers: 4
+            dropout: 0.2
+            width_mult: 1
+            #TODO check if tcn_width_mult is needed
+            tcn_width_mult: 1
+            relu_type: "prelu"
+            num_classes: 100
+
+hyperparams:
+    nb_epoch: 2
+    lr: 3e-4
+    batch_size: 2
+    alpha : 0.4
+
+hydra:
+    job:
+        chdir: true
+
+hydra:
+    job:
+        chdir: true
