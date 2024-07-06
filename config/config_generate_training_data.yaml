@@ -4,6 +4,7 @@ dataset:
   partitions: ["train", "val", "test"]
 
 export_dir: "./data/lrw-ar-landmarks"
+resume: true # if true, the script will resume from the last processed video
 
 landmarks_extraction:
   landmarks_detector:
