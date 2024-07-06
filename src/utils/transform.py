@@ -5,6 +5,26 @@ from skimage import transform as tf
 import dlib
 import mediapipe as mp
 
+def get_max_erea_face(rects, image):
+    ref_rect = None
+    max_erea = 0
+    for rect in rects:
+        startX = rect.left()
+        startY = rect.top()
+        endX = rect.right()
+        endY = rect.bottom()
+        startX = max(0, startX)
+        startY = max(0, startY)
+        endX = min(endX, image.shape[1])
+        endY = min(endY, image.shape[0])
+        w = endX - startX
+        h = endY - startY
+        area = w * h
+        if area > max_erea:
+            ref_rect = rect
+            max_erea = area
+    return ref_rect
+
 
 def extract_landmarks_dlib(video_path, detector, predictor, display = False):
     cap = cv2.VideoCapture(video_path)
@@ -18,25 +38,26 @@ def extract_landmarks_dlib(video_path, detector, predictor, display = False):
         # Detect the face
         rects = detector(gray, 1)
         # Detect landmarks for each face
-        for rect in rects:
-            # Get the landmark points
-            shape = predictor(gray, rect)
-            # Convert it to the NumPy Array
-            shape_np = np.zeros((68, 2), dtype="int")
-            for i in range(0, 68):
-                shape_np[i] = (shape.part(i).x, shape.part(i).y)
-            shape = shape_np
+        rect = get_max_erea_face(rects, image)
 
-            video_landmarks.append(shape_np)
+        # Get the landmark points
+        shape = predictor(gray, rect)
+        # Convert it to the NumPy Array
+        shape_np = np.zeros((68, 2), dtype="int")
+        for i in range(0, 68):
+            shape_np[i] = (shape.part(i).x, shape.part(i).y)
+        shape = shape_np
 
-            if display:
-                # Display the landmarks
-                for i, (x, y) in enumerate(shape):
-                    # Draw the circle to mark the keypoint
-                    cv2.circle(image, (x, y), 1, (0, 0, 255), -1)
-                cv2.imshow('Landmark Detection', image)
-                if cv2.waitKey(10) == 27:
-                    break
+        video_landmarks.append(shape_np)
+
+        if display:
+            # Display the landmarks
+            for i, (x, y) in enumerate(shape):
+                # Draw the circle to mark the keypoint
+                cv2.circle(image, (x, y), 1, (0, 0, 255), -1)
+            cv2.imshow('Landmark Detection', image)
+            if cv2.waitKey(10) == 27:
+                break
 
     cap.release()
     cv2.destroyAllWindows()
