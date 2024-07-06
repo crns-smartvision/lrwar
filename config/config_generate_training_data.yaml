@@ -1,6 +1,6 @@
 dataset:
   name: "lrw-ar"
-  dir: "/home/achraf/Documents/LRW-AR-EXPORTED" #TODO adjust the path to the root directory of the dataset
+  dir: "/home/ahmed/workspace/data/LRW-AR_" #TODO adjust the path to the root directory of the dataset
   partitions: ["train", "val", "test"]
 
 export_dir: "./data/lrw-ar-landmarks"
