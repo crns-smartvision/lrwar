@@ -5,7 +5,7 @@
  ![image](assets/merged_image.png)
 ## Pre-trained model 
 Pre-trained model can be downloaded following the link. You may save the models to ./models folder
-- [Download link]()
+- [Download link]() [comming soon!]
 ## LRW-AR Training and testing datasets can be downloaded following this link. You may save the datasets to ./data folder
 - [Download link](https://osf.io/rz49x)
 
