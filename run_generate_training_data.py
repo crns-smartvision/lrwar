@@ -197,25 +197,22 @@ def main(cfg):
     dataset_dir = cfg.dataset.dir
     partitions = cfg.dataset.partitions
 
-    do_mouth_croping = "mouth_croping" in cfg
-    if do_mouth_croping:
-        video_affix = cfg.mouth_croping.video_affix
-        video_extension = cfg.mouth_croping.video_extension
-        crop_width = cfg.mouth_croping.crop_width
-        crop_height = cfg.mouth_croping.crop_height
-        convert_to_gray = cfg.mouth_croping.convert_to_gray
-        interpolate_landmarks = cfg.mouth_croping.interpolate_landmarks
+    assert "mouth_croping" in cfg and "annotation_export_parameters" in cfg, "Assuming that annotation and video cropping are needed to use our model"
+
+    video_affix = cfg.mouth_croping.video_affix
+    video_extension = cfg.mouth_croping.video_extension
+    crop_width = cfg.mouth_croping.crop_width
+    crop_height = cfg.mouth_croping.crop_height
+    convert_to_gray = cfg.mouth_croping.convert_to_gray
+    interpolate_landmarks = cfg.mouth_croping.interpolate_landmarks
 
     landmarks_affix = cfg.landmarks_extraction.landmarks_affix
     landmarks_extension = cfg.landmarks_extraction.landmarks_extension
-
-    do_annotation_export = "annotation_export_parameters" in cfg
-    if "annotation_export_parameters" in cfg:
-        annotation_affix = cfg.annotation_export_parameters.annotation_affix
-        annotation_extension = cfg.annotation_export_parameters.annotation_extension
-
+    annotation_affix = cfg.annotation_export_parameters.annotation_affix
+    annotation_extension = cfg.annotation_export_parameters.annotation_extension
     landmarks_detector = cfg.landmarks_extraction.landmarks_detector.name
     assert landmarks_detector == "dlib", "Only dlib is supported for now"
+
     if landmarks_detector == "dlib":
         detector = dlib.get_frontal_face_detector()
         predictor = dlib.shape_predictor(cfg.landmarks_extraction.landmarks_detector.model_path)
@@ -249,40 +246,42 @@ def main(cfg):
 
                 for video in videos:
                     video_id = osp.splitext(osp.basename(video))[0]
-                    save_path = osp.join(export_class_dir, landmarks_affix + video_id + landmarks_extension)
+                    save_path_landmarks = osp.join(export_class_dir, landmarks_affix + video_id + landmarks_extension)
+                    save_path_video = osp.join(export_class_dir, video_affix + video_id + video_extension)
+                    save_path_annotation = osp.join(export_class_dir, annotation_affix + video_id + annotation_extension)
                     logger.info(f"-----------------------------------------------------------")
                     logger.info(f"Processing video {video_id} from class {class_name}")
 
-                    if resume and osp.exists(save_path):
+                    if resume and osp.exists(save_path_landmarks) and osp.exists(save_path_video) and osp.exists(save_path_annotation):
                         logger.info(f"Already processed, skipping ...")
                         continue
+
 
                     if landmarks_detector == "dlib":
                         extracted_landmarks = extract_landmarks_dlib(video, detector, predictor, display=cfg.landmarks_extraction.display)
                     elif landmarks_detector == "mediapipe":
                         extracted_landmarks = extract_landmarks_mediapipe(video, mp_face_mesh, mp_drawing, mp_drawing_styles, display=cfg.landmarks_extraction.display)
-                    save2npz(save_path, data=extracted_landmarks)
+                    save2npz(save_path_landmarks, data=extracted_landmarks)
                     logger.info(f"Landmarks extraction ... Done!")
 
-                    if do_mouth_croping:
-                        cropped_sequences = crop_mouth_region(video, extracted_landmarks, crop_width,
-                                          crop_height, convert_to_gray,
-                                          interpolate_landmarks, smoothing_landmarks_window=5,
-                                          start_landmarks_idx=48, stop_landmarks_idx=68,
-                                          mean_face_landmarks_path=cfg.mouth_croping.mean_face_landmarks_path,
-                                          display= cfg.mouth_croping.display)
+                    # Do mouth region cropping
+                    cropped_sequences = crop_mouth_region(video, extracted_landmarks, crop_width,
+                                      crop_height, convert_to_gray,
+                                      interpolate_landmarks, smoothing_landmarks_window=5,
+                                      start_landmarks_idx=48, stop_landmarks_idx=68,
+                                      mean_face_landmarks_path=cfg.mouth_croping.mean_face_landmarks_path,
+                                      display= cfg.mouth_croping.display)
 
-                        save_path = osp.join(export_class_dir, video_affix + video_id + video_extension)
-                        save2npz(save_path, data=cropped_sequences)
-                        logger.info(f"Cropping mouth region .... Done!")
 
-                    if do_annotation_export:
-                        annotation_file = osp.join(class_dir, video_id + annotation_extension)
-                        assert osp.exists(annotation_file), f"Annotation file {annotation_file} does not exist"
-                        save_path = osp.join(export_class_dir, annotation_affix + video_id + annotation_extension)
-                        # copy annotation file
-                        os.system(f"cp {annotation_file} {save_path}")
-                        logger.info(f"Exported annotation file .... Done!")
+                    save2npz(save_path_video, data=cropped_sequences)
+                    logger.info(f"Cropping mouth region .... Done!")
+
+                    # do annotation export
+                    annotation_file = osp.join(class_dir, video_id + annotation_extension)
+                    assert osp.exists(annotation_file), f"Annotation file {annotation_file} does not exist"
+                    # copy annotation file
+                    os.system(f"cp {annotation_file} {save_path_annotation}")
+                    logger.info(f"Exported annotation file .... Done!")
 
                     # export the list of classes in a txt file
                     class_list = osp.join(export_dir, "labels.txt")
