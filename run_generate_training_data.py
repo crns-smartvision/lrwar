@@ -1,31 +1,25 @@
+import os
 import os.path as osp
-
-import dlib
-import mediapipe as mp
-
-from src.utils.transform import linear_interpolate, warp_img, apply_transform, cut_patch, convert_bgr2gray
-from src.utils.transform import extract_landmarks_mediapipe, extract_landmarks_dlib
-from src.utils.utils import save2npz
-
-import cv2
-import glob
-import argparse
-import numpy as np
 from collections import deque
 
-# from mouth_extract.utils import *
-# from mouth_extract.transform import *
+import glob
+import cv2
+import numpy as np
 
-
-
-import os
 import logging
-from _version import __version__
 import hydra
 import json
 from omegaconf import OmegaConf
 import warnings
-from src.utils.path import get_cwd
+
+import dlib
+import mediapipe as mp
+
+from _version import __version__
+
+from src.utils.transform import linear_interpolate, warp_img, apply_transform, cut_patch, convert_bgr2gray
+from src.utils.transform import extract_landmarks_mediapipe, extract_landmarks_dlib
+from src.utils.utils import save2npz, get_cwd
 
 logger = logging.getLogger("Training Data generation")
 logger.setLevel(logging.INFO)
@@ -104,7 +98,7 @@ def crop_mouth_region(video, landmarks, crop_width, crop_height,
                                             crop_height//2,
                                             crop_width//2,))
                 key = cv2.waitKey(100)
-                if key == 27:  # if ESC is pressed, exit loop
+                if key == 27:
                     cv2.destroyAllWindows()
                     break
 
@@ -175,7 +169,6 @@ def crop_mouth_region(video, landmarks, crop_width, crop_height,
         save2npz(dst_pathname, data=data)
 
     print('Done.')
-
     return None
 
 
@@ -286,12 +279,6 @@ def main(cfg):
                 class_list = osp.join(export_dir, "labels.txt")
                 with open(class_list, "w") as f:
                     f.write("\n".join(classes))
-
-
-
-
-
-
 
 
 if __name__ == "__main__":
