@@ -11,6 +11,7 @@ import hydra
 import json
 from omegaconf import OmegaConf
 import warnings
+import traceback
 
 import dlib
 import mediapipe as mp
@@ -184,7 +185,10 @@ def main(cfg):
     logger.info(f"Export dir: {output_dir}")
     logger.info("Loading parameters from config file")
 
-    # get the name of the dataset
+    # resume processing or start all over
+    resume = True if cfg.resume else False
+
+    # get dataset settings
     dataset_name = cfg.dataset.name
     export_dir = cfg.export_dir
     if not osp.exists(export_dir):
@@ -221,64 +225,75 @@ def main(cfg):
         mp_drawing_styles = mp.solutions.drawing_styles
         mp_face_mesh = mp.solutions.face_mesh
 
-    for partition in partitions:
-        partition_dir = osp.join(dataset_dir, partition)
-        assert osp.exists(partition_dir), f"Partition {partition} does not exist in {dataset_dir}"
+    try:
+        for partition in partitions:
+            partition_dir = osp.join(dataset_dir, partition)
+            assert osp.exists(partition_dir), f"Partition {partition} does not exist in {dataset_dir}"
 
-        export_partition_dir = osp.join(export_dir, partition)
-        if not osp.exists(export_partition_dir):
-            os.makedirs(export_partition_dir)
+            export_partition_dir = osp.join(export_dir, partition)
+            if not osp.exists(export_partition_dir):
+                os.makedirs(export_partition_dir)
 
-        # go over all classes
-        classes = os.listdir(partition_dir)
-        for class_name in classes:
-            class_dir = osp.join(partition_dir, class_name)
-            assert osp.exists(class_dir), f"Class {class_name} does not exist in {partition_dir}"
+            # go over all classes
+            classes = os.listdir(partition_dir)
+            for class_name in classes:
+                class_dir = osp.join(partition_dir, class_name)
+                assert osp.exists(class_dir), f"Class {class_name} does not exist in {partition_dir}"
 
-            export_class_dir = osp.join(export_partition_dir, class_name)
-            if not osp.exists(export_class_dir):
-                os.makedirs(export_class_dir)
+                export_class_dir = osp.join(export_partition_dir, class_name)
+                if not osp.exists(export_class_dir):
+                    os.makedirs(export_class_dir)
 
-            # get list of videos
-            videos = glob.glob(osp.join(class_dir, f"*.mp4"))
+                # get list of videos
+                videos = glob.glob(osp.join(class_dir, f"*.mp4"))
 
-            for video in videos:
-                video_id = osp.splitext(osp.basename(video))[0]
-                save_path = osp.join(export_class_dir, landmarks_affix + video_id + landmarks_extension)
-                logger.info(f"-----------------------------------------------------------")
-                logger.info(f"Processing video {video_id} from class {class_name}")
-                if landmarks_detector == "dlib":
-                    extracted_landmarks = extract_landmarks_dlib(video, detector, predictor, display=cfg.landmarks_extraction.display)
-                elif landmarks_detector == "mediapipe":
-                    extracted_landmarks = extract_landmarks_mediapipe(video, mp_face_mesh, mp_drawing, mp_drawing_styles, display=cfg.landmarks_extraction.display)
-                save2npz(save_path, data=extracted_landmarks)
-                logger.info(f"Landmarks extraction ... Done!")
+                for video in videos:
+                    video_id = osp.splitext(osp.basename(video))[0]
+                    save_path = osp.join(export_class_dir, landmarks_affix + video_id + landmarks_extension)
+                    logger.info(f"-----------------------------------------------------------")
+                    logger.info(f"Processing video {video_id} from class {class_name}")
 
-                if do_mouth_croping:
-                    cropped_sequences = crop_mouth_region(video, extracted_landmarks, crop_width,
-                                      crop_height, convert_to_gray,
-                                      interpolate_landmarks, smoothing_landmarks_window=5,
-                                      start_landmarks_idx=48, stop_landmarks_idx=68,
-                                      mean_face_landmarks_path=cfg.mouth_croping.mean_face_landmarks_path,
-                                      display= cfg.mouth_croping.display)
+                    if resume and osp.exists(save_path):
+                        logger.info(f"Already processed, skipping ...")
+                        continue
 
-                    save_path = osp.join(export_class_dir, video_affix + video_id + video_extension)
-                    save2npz(save_path, data=cropped_sequences)
-                    logger.info(f"Cropping mouth region .... Done!")
+                    if landmarks_detector == "dlib":
+                        extracted_landmarks = extract_landmarks_dlib(video, detector, predictor, display=cfg.landmarks_extraction.display)
+                    elif landmarks_detector == "mediapipe":
+                        extracted_landmarks = extract_landmarks_mediapipe(video, mp_face_mesh, mp_drawing, mp_drawing_styles, display=cfg.landmarks_extraction.display)
+                    save2npz(save_path, data=extracted_landmarks)
+                    logger.info(f"Landmarks extraction ... Done!")
 
-                if do_annotation_export:
-                    annotation_file = osp.join(class_dir, video_id + annotation_extension)
-                    assert osp.exists(annotation_file), f"Annotation file {annotation_file} does not exist"
-                    save_path = osp.join(export_class_dir, annotation_affix + video_id + annotation_extension)
-                    # copy annotation file
-                    os.system(f"cp {annotation_file} {save_path}")
-                    logger.info(f"Exported annotation file .... Done!")
+                    if do_mouth_croping:
+                        cropped_sequences = crop_mouth_region(video, extracted_landmarks, crop_width,
+                                          crop_height, convert_to_gray,
+                                          interpolate_landmarks, smoothing_landmarks_window=5,
+                                          start_landmarks_idx=48, stop_landmarks_idx=68,
+                                          mean_face_landmarks_path=cfg.mouth_croping.mean_face_landmarks_path,
+                                          display= cfg.mouth_croping.display)
 
+                        save_path = osp.join(export_class_dir, video_affix + video_id + video_extension)
+                        save2npz(save_path, data=cropped_sequences)
+                        logger.info(f"Cropping mouth region .... Done!")
 
-                # export the list of classes in a txt file
-                class_list = osp.join(export_dir, "labels.txt")
-                with open(class_list, "w") as f:
-                    f.write("\n".join(classes))
+                    if do_annotation_export:
+                        annotation_file = osp.join(class_dir, video_id + annotation_extension)
+                        assert osp.exists(annotation_file), f"Annotation file {annotation_file} does not exist"
+                        save_path = osp.join(export_class_dir, annotation_affix + video_id + annotation_extension)
+                        # copy annotation file
+                        os.system(f"cp {annotation_file} {save_path}")
+                        logger.info(f"Exported annotation file .... Done!")
+
+                    # export the list of classes in a txt file
+                    class_list = osp.join(export_dir, "labels.txt")
+                    with open(class_list, "w") as f:
+                        f.write("\n".join(classes))
+
+        logger.info("Processing completed successfully!")
+    except Exception as e:
+        logger.error("Error during processing")
+        logger.error(traceback.format_exc())
+        raise e
 
 
 if __name__ == "__main__":
