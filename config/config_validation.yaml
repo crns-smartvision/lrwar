@@ -103,8 +103,6 @@ model:
             num_layers: 4
             dropout: 0.2
             width_mult: 1
-            #TODO check if tcn_width_mult is needed
-            tcn_width_mult: 1
             relu_type: "prelu"
             # update the number of class according to the dataset parameters
             num_classes: 3

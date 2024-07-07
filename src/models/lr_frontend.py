@@ -59,7 +59,6 @@ class LandmarksFrontend(nn.Module):
 
 
     def forward(self, landmarks):
-        # TODO change x to landmarks to get the sizes
         seq_length = landmarks.shape[1]
         batch_size = landmarks.shape[0]
 
