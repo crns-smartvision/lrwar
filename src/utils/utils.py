@@ -60,7 +60,6 @@ class CosineScheduler:
         change_lr_on_optimizer(optimizer, self.lr_ori*reduction_ratio)
 
 
-
 def get_cwd():
     """
     custom function to get the current hydra output directory while keeping the original working directory

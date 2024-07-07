@@ -15,7 +15,7 @@
 </pre>
 
 ## Pre-trained model 
-Pre-trained model can be downloaded following the link. You may save the models to ./models folder
+Pre-trained model can be downloaded following the link. You may save the model to ./checkpoints folder
 - [Download link]() [comming soon!]
 ## LRW-AR Training and testing datasets can be downloaded following this link. You may save the datasets to ./data folder
 - [Download link](https://osf.io/rz49x)
@@ -27,8 +27,8 @@ DLIB facial landmarks detection model can be downloaded following this link. You
 - [Download link](https://drive.google.com/file/d/1HZW_xVIZySJ-5yFoE-nztfo4VxhDxGyT)
 ## Runners and configuration files
 - "**run_generate_training_data.py**", configuration yaml file in "**config/config_generate_training_data.yaml**"
-- "**run_train.py**", configuration yaml file in "**config/config_train.yaml**"
-- "**run_validate.py**", configuration yaml file in "**config/config_validation.yaml**"
+- "**run_training.py**", configuration yaml file in "**config/config_train.yaml**"
+- "**run_validation.py**", configuration yaml file in "**config/config_validation.yaml**"
 
 ## Setup for Dev on local machine
 This code base is tested only on Ubuntu 20.04 LTS, TitanV and RTX2080-ti NVIDIA GPUs.
