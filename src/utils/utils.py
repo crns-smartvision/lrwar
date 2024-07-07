@@ -1,4 +1,5 @@
 import os
+import math
 import numpy as np
 import csv
 import hydra
@@ -9,10 +10,10 @@ def read_txt_lines(filepath):
         content = myfile.read().splitlines()
     return content
 
-def save2npz(filename, data=None):                                               
-    assert data is not None, "data is {}".format(data)                           
-    if not os.path.exists(os.path.dirname(filename)):                            
-        os.makedirs(os.path.dirname(filename))                                   
+def save2npz(filename, data=None):
+    assert data is not None, "data is {}".format(data)
+    if not os.path.exists(os.path.dirname(filename)):
+        os.makedirs(os.path.dirname(filename))
     np.savez_compressed(filename, data=data)
 
 
@@ -43,7 +44,23 @@ def read_csv_lines(filepath):
                 print(end)
                 csv_file.close()
                 return start, end
-            
+
+def change_lr_on_optimizer(optimizer, lr):
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+
+
+class CosineScheduler:
+    def __init__(self, lr_ori, epochs):
+        self.lr_ori = lr_ori
+        self.epochs = epochs
+
+    def adjust_lr(self, optimizer, epoch):
+        reduction_ratio = 0.5 * (1 + math.cos(math.pi * epoch / self.epochs))
+        change_lr_on_optimizer(optimizer, self.lr_ori*reduction_ratio)
+
+
+
 def get_cwd():
     """
     custom function to get the current hydra output directory while keeping the original working directory
