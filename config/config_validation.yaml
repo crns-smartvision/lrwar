@@ -1,18 +1,13 @@
 paths:
     log: "runs"
-    # if you need to start training over a checkpoint, you can specify the path of the checkpoint
+
+checkpoint: "./checkpoints/lrwar-landmarks-fusionnet-final.pth"
 
 hyperparams:
-    nb_epoch: 2000
-    lr: 3e-4
-    weight_decay: 1e-2
-    batch_size: 10
-    alpha : 0.4
-
-    #checkpoint: "PATH TO THE .pth CHECKPOINT FILE" # if resume is set to true, the checkpoint should be defined as well.
-    resume: false
+    batch_size: 32 # 32 should be adapted to your GPU memory
 
 dataset:
+        # dataset selection "lrw-ar-landmarks" or "lrw-ar"
     name: "lrw-ar-landmarks"
     dir: "./data/lrw-ar-landmarks"
     params:
@@ -22,17 +17,6 @@ dataset:
         # if you need to filter out some videos from the dataset, just add it id (e.g., 00018676_الأميركية) to the following file,
         #filtered_ids_file: "filtered_ids.txt"
         preprocessing:
-            train:
-                random_crop:
-                    enabled: true
-                    size: 88
-                normalize:
-                    enabled: true
-                    mean: 0.421
-                    std: 0.165
-                random_horizontal_flip:
-                    enabled: true
-                    probability: 0.5
             val:
                 central_crop:
                     enabled: true
@@ -53,10 +37,6 @@ dataset:
                     std: 0.165
                 random_horizontal_flip:
                     enabled: false
-
-#dataset:
-#    name: "lrw-ar"
-#    dir: "/home/achraf/workspace/crns/gitprojects/LRW_AR_FUSION/data/lrwar"
 
 model:
     frontend:
@@ -127,8 +107,7 @@ model:
             tcn_width_mult: 1
             relu_type: "prelu"
             # update the number of class according to the dataset parameters
-            num_classes: 100
-
+            num_classes: 3
 
 hydra:
     job:
