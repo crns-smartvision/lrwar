@@ -46,7 +46,7 @@ def main(cfg):
     batch_size = cfg.hyperparams.batch_size
 
     # creates dataset and dataloader
-    val_dataset = dataset_factory(cfg.dataset, data_partition="val")
+    val_dataset = dataset_factory(cfg.dataset, data_partition="test")
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=pad_packed_collate)
 
     if cfg.model.backend.params.num_classes != val_dataset.number_classes:
