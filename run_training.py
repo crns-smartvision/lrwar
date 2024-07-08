@@ -121,7 +121,7 @@ def main(cfg):
                       "loss": loss_epoch}
         checkpoint_export_path = os.path.join(output_dir, f"{epoch}.pth")
         torch.save(checkpoint, checkpoint_export_path)
-        logger.info(f"Checkpoint savec to: {checkpoint_export_path}")
+        logger.info(f"Checkpoint saved to: {checkpoint_export_path}")
         scheduler.adjust_lr(optimizer, epoch)
 
 
