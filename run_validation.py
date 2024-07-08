@@ -49,7 +49,7 @@ def main(cfg):
     val_dataset = dataset_factory(cfg.dataset, data_partition="val")
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=pad_packed_collate)
 
-    if cfg.model.backend.params.num_classes != val_loader.number_classes:
+    if cfg.model.backend.params.num_classes != val_dataset.number_classes:
         raise ValueError("Number of classes in the dataset and model do not match")
 
     logger.info("Start validation iterations ...")
