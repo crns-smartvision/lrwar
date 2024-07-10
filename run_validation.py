@@ -16,7 +16,6 @@ from src.models import model_factory
 
 from src.utils.utils import get_cwd
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 logger = logging.getLogger("Validation")
 logger.setLevel(logging.INFO)

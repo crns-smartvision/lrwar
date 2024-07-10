@@ -1,7 +1,6 @@
 <img src="https://crns.rnrt.tn/img/logo.svg">
 
 # Welcome to the official implementation of "Cross-Attention Fusion of Visual and Geometric Features for Large Vocabulary Arabic Lipreading"
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
  ![image](assets/merged_image.png)
 
 [![arXiv](https://img.shields.io/badge/arXiv-2208.11424-b31b1b.svg)](https://arxiv.org/abs/2402.11520) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
