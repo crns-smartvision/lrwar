@@ -41,6 +41,7 @@ def main(cfg):
     model = model_factory(cfg.model).to(device)
     weights = torch.load(checkpoint)
     model.load_state_dict(weights["state_dict"])
+    model.eval()
 
     batch_size = cfg.hyperparams.batch_size
 
@@ -62,6 +63,7 @@ def main(cfg):
     accuracy_val = running_corrects / len(val_loader.dataset)
 
     logger.info(f"Accuracy_val= {accuracy_val:0.4f}")
+
 
 if __name__ == "__main__":
     main()
