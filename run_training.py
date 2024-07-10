@@ -63,7 +63,7 @@ def main(cfg):
     train_dataset = dataset_factory(cfg.dataset, data_partition="train")
     val_dataset = dataset_factory(cfg.dataset, data_partition="val")
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=pad_packed_collate)
-    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=True, collate_fn=pad_packed_collate)
+    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=pad_packed_collate)
     model = model_factory(cfg.model).to(device)
 
     scheduler = CosineScheduler(initial_lr, nb_epoch)
@@ -81,6 +81,7 @@ def main(cfg):
     logger.info("Start Epochs ...")
 
     for epoch in range(starting_epoch,nb_epoch):
+        model.train()
         loss_epoch = []
 
         for batch_idx, (videos, lengths, labels, landmarks) in enumerate(tqdm(train_loader)):
@@ -103,6 +104,7 @@ def main(cfg):
         running_loss = 0.
         running_corrects = 0.
 
+        model.eval()
         with torch.no_grad():
             for batch_idx, (input, lengths, labels, landmarks) in enumerate(tqdm(val_loader)):
                 logits = model(input.unsqueeze(1).to(device), landmarks.to(device), lengths=lengths)
