@@ -15,7 +15,7 @@
 
 ## Pre-trained model 
 Pre-trained model can be downloaded following the link. You may save the model to ./checkpoints folder
-- [Download link]() [comming soon!]
+- [Download link](https://drive.google.com/file/d/186P4fFTOsWhDqpML5lbaKilhPkVi-Yfq/view)
 ## LRW-AR Training and testing datasets can be downloaded following this link. You may save the datasets to ./data folder
 - [Download link](https://osf.io/rz49x)
 
